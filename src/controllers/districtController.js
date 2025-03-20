@@ -99,3 +99,27 @@ exports.updateDistrictPopulation = async(req, res) => {
         })
     }
 }
+
+exports.StatesWithDistricts = async(req, res) => {
+    try {
+        const result = await District.aggregate([
+            {
+              $lookup: {
+                from: "states",
+                localField: "state_id",
+                foreignField: "_id",
+                as: "stateDetails"
+              }
+            },
+            {
+              $unwind: "$stateDetails" 
+            }
+          ]);
+      
+          res.json({ districts: result });
+    } catch {
+        res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+}

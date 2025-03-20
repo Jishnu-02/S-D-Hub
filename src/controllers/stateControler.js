@@ -70,3 +70,50 @@ exports.getAllStates = async(req, res) => {
         states
     })
 }
+
+exports.totalPopulationState = async(req, res) => {
+    try {
+        const result = await State.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalPopulation: { $sum: "$population"}
+                }
+            }
+        ])
+
+        if(result.length === 0) {
+            return res.status(404).json({ error: "No states found" });
+        }
+    
+        res.json({ totalPopulation: result[0].totalPopulation });
+    
+    } catch {
+        res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+}
+
+exports.averageDensity = async(req, res) => {
+    try {
+        const states = await State.find({},{name: 1, population: 1, area: 1})
+        
+        const densities = states.map((state) => {
+            if (state.area === 0) {
+                return { name: state.name, error: "Area cannot be zero" };
+              }
+              return {
+                name: state.name,
+                populationDensity: state.population / state.area,
+              };
+        })
+
+        res.json({densities})
+        
+    } catch {
+        res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+}
